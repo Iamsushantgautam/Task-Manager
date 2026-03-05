@@ -1,16 +1,44 @@
-# React + Vite
+# Task Manager - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The frontend of the Task Manager application, built with React and Vite. It provides a fast, responsive, and intuitive user interface for managing tasks.
 
-Currently, two official plugins are available:
+## 🛠️ Technology Stack
+- **Framework**: React 19
+- **Build Tool**: Vite
+- **Routing**: React Router DOM (v7)
+- **HTTP Client**: Axios
+- **Styling**: TailwindCSS & Custom CSS
+- **Authentication**: JWT parsing via `jwt-decode`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📁 Key Features
+- **Authentication Pages**: Login and Registration screens with validation.
+- **Dashboard**: A protected view where users can see their personal tasks.
+- **Task Interaction**: Users can easily add, update, mark as complete, or delete tasks.
+- **Context API State**: Global state management for authentication properties.
 
-## React Compiler
+## 🚀 Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Installation
+Ensure you are in the `frontend` directory and run:
+```bash
+npm install
+```
 
-## Expanding the ESLint configuration
+### 2. Environment Variables
+Create a `.env` file in the `frontend` root (if needed by your API base URL configuration) with your backend API URL. For example:
+```env
+VITE_API_BASE_URL=http://localhost:5000
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 3. Running the App
+Start the development server:
+```bash
+npm run dev
+```
+The application will launch on `http://localhost:5173`.
+
+### Available Scripts
+- `npm run dev` - Starts the Vite development server.
+- `npm run build` - Builds the application for production.
+- `npm run lint` - Runs ESLint to check for code quality issues.
+- `npm run preview` - Previews the production build locally.
