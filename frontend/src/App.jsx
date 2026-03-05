@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useContext } from 'react';
 import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
@@ -14,11 +14,15 @@ function PrivateRoute({ children }) {
   return user ? children : <Navigate to="/login" />;
 }
 
-function App() {
+function Layout() {
+  const location = useLocation();
+  const authRoutes = ['/login', '/register'];
+  const isAuthPage = authRoutes.includes(location.pathname);
+
   return (
-    <Router>
-      <Header />
-      <div className="container">
+    <>
+      {!isAuthPage && <Header />}
+      <div className={isAuthPage ? '' : 'container'}>
         <Routes>
           <Route
             path="/"
@@ -28,10 +32,18 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<div className="auth-page"><Login /></div>} />
+          <Route path="/register" element={<div className="auth-page"><Register /></div>} />
         </Routes>
       </div>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Layout />
     </Router>
   );
 }

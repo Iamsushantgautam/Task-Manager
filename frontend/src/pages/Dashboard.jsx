@@ -11,6 +11,11 @@ const Dashboard = () => {
     const [taskTitle, setTaskTitle] = useState('');
     const [taskDesc, setTaskDesc] = useState('');
 
+    // Edit state
+    const [editingId, setEditingId] = useState(null);
+    const [editTitle, setEditTitle] = useState('');
+    const [editDesc, setEditDesc] = useState('');
+
     useEffect(() => {
         if (!user) {
             navigate('/login');
@@ -22,7 +27,6 @@ const Dashboard = () => {
     const onSubmit = (e) => {
         e.preventDefault();
         if (!taskTitle) return;
-
         createTask({ title: taskTitle, description: taskDesc });
         setTaskTitle('');
         setTaskDesc('');
@@ -33,37 +37,73 @@ const Dashboard = () => {
         updateTask(task._id, { status: newStatus });
     };
 
+    const startEdit = (task) => {
+        setEditingId(task._id);
+        setEditTitle(task.title);
+        setEditDesc(task.description || '');
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
+        setEditTitle('');
+        setEditDesc('');
+    };
+
+    const saveEdit = (task) => {
+        if (!editTitle.trim()) return;
+        updateTask(task._id, { title: editTitle, description: editDesc });
+        cancelEdit();
+    };
+
+    const pendingCount = tasks.filter(t => t.status === 'Pending').length;
+    const completedCount = tasks.filter(t => t.status === 'Completed').length;
+
     return (
         <div>
+            {/* Stats Bar */}
+            {tasks.length > 0 && (
+                <div className="stats-bar mb-4">
+                    <div className="stat-item">
+                        <span className="stat-number">{tasks.length}</span>
+                        <span className="stat-label">Total</span>
+                    </div>
+                    <div className="stat-item">
+                        <span className="stat-number" style={{ color: 'var(--warning-color)' }}>{pendingCount}</span>
+                        <span className="stat-label">Pending</span>
+                    </div>
+                    <div className="stat-item">
+                        <span className="stat-number" style={{ color: 'var(--success-color)' }}>{completedCount}</span>
+                        <span className="stat-label">Completed</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Task Form */}
             <section className="glass-panel mb-4">
                 <h2 className="mb-2">Add New Task</h2>
-                <form onSubmit={onSubmit} className="flex-col gap-1">
-                    <div className="form-group">
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Task Title (required)"
-                            value={taskTitle}
-                            onChange={(e) => setTaskTitle(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="form-group flex gap-2">
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Task Description (optional)"
-                            value={taskDesc}
-                            onChange={(e) => setTaskDesc(e.target.value)}
-                            style={{ flex: 1 }}
-                        />
-                        <button type="submit" className="btn btn-primary" disabled={!taskTitle}>
-                            Add Task
-                        </button>
-                    </div>
+                <form onSubmit={onSubmit} className="task-form">
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Task title (required)"
+                        value={taskTitle}
+                        onChange={(e) => setTaskTitle(e.target.value)}
+                        required
+                    />
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Description (optional)"
+                        value={taskDesc}
+                        onChange={(e) => setTaskDesc(e.target.value)}
+                    />
+                    <button type="submit" className="btn btn-primary" disabled={!taskTitle}>
+                        + Add Task
+                    </button>
                 </form>
             </section>
 
+            {/* Task List */}
             <section>
                 <h2 className="mb-4">Your Tasks</h2>
                 {loading ? (
@@ -71,38 +111,92 @@ const Dashboard = () => {
                 ) : tasks.length > 0 ? (
                     <div className="tasks-grid">
                         {tasks.map((task) => (
-                            <div key={task._id} className={`task-item ${task.status.toLowerCase()}`}>
-                                <div className="task-header">
-                                    <div>
-                                        <h3 style={{ marginBottom: '0.2rem', color: task.status === 'Completed' ? 'var(--text-secondary)' : 'var(--text-primary)', textDecoration: task.status === 'Completed' ? 'line-through' : 'none' }}>{task.title}</h3>
-                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                            {new Date(task.createdAt).toLocaleString()}
-                                        </span>
+                            <div key={task._id} className={`task-card ${task.status.toLowerCase()}`}>
+
+                                {editingId === task._id ? (
+                                    /* ---- Edit Mode ---- */
+                                    <div className="task-edit-form">
+                                        <div className="task-card-badge">
+                                            <span className={`badge ${task.status.toLowerCase()}`}>
+                                                ✏️ Editing
+                                            </span>
+                                        </div>
+                                        <input
+                                            className="form-control"
+                                            value={editTitle}
+                                            onChange={(e) => setEditTitle(e.target.value)}
+                                            placeholder="Task title"
+                                            autoFocus
+                                        />
+                                        <input
+                                            className="form-control"
+                                            value={editDesc}
+                                            onChange={(e) => setEditDesc(e.target.value)}
+                                            placeholder="Description (optional)"
+                                        />
+                                        <div className="task-card-footer">
+                                            <button
+                                                className="btn-action complete"
+                                                onClick={() => saveEdit(task)}
+                                                disabled={!editTitle.trim()}
+                                            >
+                                                ✓ Save
+                                            </button>
+                                            <button className="btn-action undo" onClick={cancelEdit}>
+                                                ✕ Cancel
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="task-actions">
-                                        <button
-                                            className={`btn ${task.status === 'Pending' ? 'btn-success' : 'btn-success'}`}
-                                            onClick={() => toggleStatus(task)}
-                                        >
-                                            {task.status === 'Pending' ? 'Complete' : 'Undo'}
-                                        </button>
-                                        <button className="btn btn-danger" onClick={() => deleteTask(task._id)}>
-                                            Delete
-                                        </button>
-                                    </div>
-                                </div>
-                                {task.description && (
-                                    <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', textDecoration: task.status === 'Completed' ? 'line-through' : 'none' }}>
-                                        {task.description}
-                                    </p>
+                                ) : (
+                                    /* ---- View Mode ---- */
+                                    <>
+                                        {/* Status Badge + Date */}
+                                        <div className="task-card-badge">
+                                            <span className={`badge ${task.status.toLowerCase()}`}>
+                                                {task.status === 'Pending' ? '🕐 Pending' : '✅ Completed'}
+                                            </span>
+                                            <span className="task-date">
+                                                {new Date(task.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </span>
+                                        </div>
+
+                                        {/* Title */}
+                                        <h3 className={`task-title ${task.status === 'Completed' ? 'done' : ''}`}>
+                                            {task.title}
+                                        </h3>
+
+                                        {/* Description */}
+                                        {task.description && (
+                                            <p className={`task-desc ${task.status === 'Completed' ? 'done' : ''}`}>
+                                                {task.description}
+                                            </p>
+                                        )}
+
+                                        {/* Actions */}
+                                        <div className="task-card-footer">
+                                            <button
+                                                className={`btn-action ${task.status === 'Pending' ? 'complete' : 'undo'}`}
+                                                onClick={() => toggleStatus(task)}
+                                            >
+                                                {task.status === 'Pending' ? '✓ Complete' : '↩ Undo'}
+                                            </button>
+                                            <button className="btn-action edit" onClick={() => startEdit(task)}>
+                                                ✏ Edit
+                                            </button>
+                                            <button className="btn-action delete" onClick={() => deleteTask(task._id)}>
+                                                🗑 Delete
+                                            </button>
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="glass-panel text-center">
-                        <h3>No tasks found</h3>
-                        <p className="text-secondary">Create a task above to get started.</p>
+                    <div className="empty-state glass-panel text-center">
+                        <div className="empty-icon">📋</div>
+                        <h3>No tasks yet</h3>
+                        <p className="text-secondary">Create your first task above to get started.</p>
                     </div>
                 )}
             </section>
