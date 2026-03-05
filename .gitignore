@@ -4,5 +4,3 @@ dist
 .env.*
 frontend/.env
 frontend/.env.*
-backend/models/
-models/
